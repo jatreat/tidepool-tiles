@@ -42,6 +42,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0B3442;color:#fff;fon
 #toast.show{opacity:1}
 #coach{position:absolute;left:50%;transform:translateX(-50%);max-width:min(340px,calc(100% - 24px));padding:10px 15px;border-radius:14px;background:#FFF8EC;color:var(--ink);font-weight:900;font-size:15.5px;line-height:1.3;text-align:center;box-shadow:0 5px 0 rgba(0,0,0,.18),0 10px 24px rgba(0,0,0,.25);pointer-events:none;z-index:4}
 #hand{position:absolute;width:54px;height:54px;pointer-events:none;z-index:5;animation:tap 1s ease-in-out infinite;filter:drop-shadow(0 4px 4px rgba(0,0,0,.35))}
+#hand svg{display:block;width:100%;height:100%}
 @keyframes tap{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(4px,7px) scale(.92)}}
 @media (prefers-reduced-motion:reduce){#hand{animation:none}}
 #banner{position:absolute;left:0;right:0;top:34%;text-align:center;pointer-events:none;z-index:4;opacity:0;transition:opacity .35s}
@@ -91,7 +92,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0B3442;color:#fff;fon
     </div>
     <div id="toast" role="status"></div>
     <div id="coach" hidden></div>
-    <svg id="hand" hidden viewBox="0 0 64 64" aria-hidden="true"><path d="M24 58V30c0-3.2 4.4-3.2 4.4 0V14c0-3.4 5-3.4 5 0v13-4c0-3.3 5-3.3 5 0v5-2c0-3.3 5-3.3 5 0v3c0-3 4.6-3 4.6 0v13c0 9-6 15-14 15h-4c-4 0-7-2-9-4l-9-10c-2-2.4 1-5.6 3.6-3.6z" fill="#FFF8EC" stroke="#14303F" stroke-width="3" stroke-linejoin="round"/></svg>
+    <div id="hand" hidden aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M24 58V30c0-3.2 4.4-3.2 4.4 0V14c0-3.4 5-3.4 5 0v13-4c0-3.3 5-3.3 5 0v5-2c0-3.3 5-3.3 5 0v3c0-3 4.6-3 4.6 0v13c0 9-6 15-14 15h-4c-4 0-7-2-9-4l-9-10c-2-2.4 1-5.6 3.6-3.6z" fill="#FFF8EC" stroke="#14303F" stroke-width="3" stroke-linejoin="round"/></svg></div>
     <div id="banner"><b id="bannerT"></b><small id="bannerS"></small></div>
     <div id="coverTitle" hidden>Tidepool<br>Tiles</div>
   </div>
