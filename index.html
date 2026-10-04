@@ -899,7 +899,7 @@ TP.setSalts({"tall":[0,0,0,0,0,0,0,0,1,0,0,0,19,11,2,0,3,0,1,1,0,3,4,1,1,0,2,0,0
   var LV = null, tiles = [], order = [], tray = [], side = [], history = [], pending = [];
   var G = { state: "boot", used: 0, conts: 0, combo: 0, lastMatch: -9, comboCoins: 0, failAt: 0, winAt: 0, cls: "tall", started: 0 };
   var parts = [], floats = [], confetti = [], hoverId = -1, bubbles = [];
-  var SIDE_CAP = 6;
+  var SIDE_CAP = 6, curN = 1;
   var FACE = 1.16, THK = 0.09, DZ = 0.07;
 
   function measure() {
@@ -927,15 +927,26 @@ TP.setSalts({"tall":[0,0,0,0,0,0,0,0,1,0,0,0,19,11,2,0,3,0,1,1,0,3,4,1,1,0,2,0,0
       g.boardTop = 6; g.boardBot = g.sideY - 6;
       g.boostX = W / 2; g.boostY = g.trayY + g.trayH + 12;
     } else {
+      // side row | tray | boosters, centred as one group; shrink the tray until the group fits
       g.boostH = 0;
-      g.trayX = (W - g.trayW) / 2;
+      var boostW = 3 * 60 + 2 * 14, avail = W - 16, tries = 0;
+      while (tries++ < 60) {
+        g.gap = g.slotS * 0.09; g.pad = g.slotS * 0.16;
+        g.trayW = 7 * g.slotS + 6 * g.gap + g.pad * 2;
+        g.trayH = g.slotS * (FACE + THK) + g.pad * 2;
+        g.sideS = Math.min(g.slotS * 0.82, (g.trayH + 4 - g.gap) / (2 * (FACE + THK)));
+        g.sideW = 3 * g.sideS + 2 * g.gap;
+        g.groupW = g.sideW + 22 + g.trayW + 18 + boostW;
+        if (g.groupW <= avail || g.slotS <= 30) break;
+        g.slotS -= 1;
+      }
+      var x0 = Math.max(8, (W - g.groupW) / 2);
+      g.sideX = x0;
+      g.trayX = x0 + g.sideW + 22;
       g.trayY = H - g.trayH - 10;
-      g.sideS = Math.min(g.slotS * 0.82, (g.trayH + 4 - g.gap) / (2 * (FACE + THK)));
-      var colW = 3 * g.sideS + 2 * g.gap;
-      g.sideX = Math.max(8, g.trayX - colW - 22);
       g.sideY = g.trayY + (g.trayH - (2 * g.sideS * (FACE + THK) + g.gap)) / 2;
-      g.boardTop = 6; g.boardBot = g.trayY - 10;
-      g.boostX = g.trayX + g.trayW + 18; g.boostY = g.trayY + (g.trayH - 60) / 2;
+      g.boardTop = 6; g.boardBot = g.trayY - 10 - (curN <= 3 ? 54 : 0);
+      g.boostX = g.trayX + g.trayW + 18; g.boostY = Math.min(g.trayY + (g.trayH - 60) / 2, H - 60 - 26);
     }
     g.boardL = 10; g.boardR = W - 10;
     geo = g;
@@ -945,18 +956,12 @@ TP.setSalts({"tall":[0,0,0,0,0,0,0,0,1,0,0,0,19,11,2,0,3,0,1,1,0,3,4,1,1,0,2,0,0
     placeBoosters();
     fitBoard();
     paintBg();
+    positionCoach();
   }
   function placeBoosters() {
     var b = $("boosters");
     if (arrange === "stack") { b.style.left = "0"; b.style.right = "0"; b.style.justifyContent = "center"; b.style.top = geo.boostY + "px"; b.style.flexDirection = "row"; }
     else { b.style.left = geo.boostX + "px"; b.style.right = "auto"; b.style.top = (geo.boostY - 6) + "px"; b.style.justifyContent = "flex-start"; b.style.flexDirection = "row"; }
-    // keep the right-hand booster group on screen in narrow landscape windows
-    if (arrange === "side") {
-      var need = 3 * 60 + 2 * 14;
-      if (geo.boostX + need > W - 8) {
-        b.style.left = "auto"; b.style.right = "8px";
-      }
-    }
   }
   function boardSpan() {
     if (!LV) return { x0: 0, x1: 1, y0: 0, y1: 1 };
@@ -1037,6 +1042,7 @@ TP.setSalts({"tall":[0,0,0,0,0,0,0,0,1,0,0,0,19,11,2,0,3,0,1,1,0,3,4,1,1,0,2,0,0
 
   function startLevel(n, opts) {
     opts = opts || {};
+    curN = n;
     measure();
     var aspect = (geo.boardR - geo.boardL) / Math.max(1, geo.boardBot - geo.boardTop);
     G.cls = TP.shapeClassFor(aspect / 1.04);
@@ -1335,12 +1341,19 @@ TP.setSalts({"tall":[0,0,0,0,0,0,0,0,1,0,0,0,19,11,2,0,3,0,1,1,0,3,4,1,1,0,2,0,0
     clearTimeout(coachT);
     if (!text) { el.hidden = true; hand.hidden = true; return; }
     el.textContent = text; el.hidden = false;
-    var top = (arrange === "stack" ? geo.sideY + geo.sideH / 2 : geo.trayY) - el.offsetHeight - (arrange === "stack" ? -el.offsetHeight / 2 : 10);
-    el.style.top = Math.max(8, top) + "px";
+    positionCoach();
     if (target) { hand.hidden = false; coachTarget = target; } else { hand.hidden = true; coachTarget = null; }
     if (secs) coachT = setTimeout(function () { el.hidden = true; hand.hidden = true; coachTarget = null; }, secs * 1000);
   }
   var coachTarget = null;
+  // sits just above the tray (in the side-row space on phones); re-run whenever the frame resizes
+  function positionCoach() {
+    var el = $("coach");
+    if (el.hidden || !geo.trayY) return;
+    var h = el.offsetHeight || 44;
+    var top = arrange === "stack" ? geo.sideY + (geo.sideH - h) / 2 : geo.trayY - h - 10;
+    el.style.top = Math.max(8, top) + "px";
+  }
   function coachForLevel(n) {
     coach(null);
     if (n === 1 && !S.tut.done1) { S.tut.step = 1; var free = tiles.filter(function (t) { return isFree(t); }); coach("Tap a tile to move it to the tray.", free[Math.floor(free.length / 2)] || null); }
